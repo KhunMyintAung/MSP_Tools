@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MSP Tools — Phase 2 Real Device & Chipset Inspector</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; background: #080d0b; color: #e2e8f0; font-family: "Segoe UI", system-ui, sans-serif; overflow: hidden; }
+    .app-shell { display: flex; flex-direction: column; height: 100vh; }
+    .titlebar { height: 36px; background: #050807; border-bottom: 1px solid #1a2e24; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-size: 12px; }
+    .brand-group { display: flex; align-items: center; gap: 8px; }
+    .logo-badge { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid #f59e0b; background: radial-gradient(circle, #10b981, #064e3b); display: grid; place-items: center; font-weight: 900; font-size: 12px; color: #fde68a; }
+    .title-gold { font-weight: 800; color: #f59e0b; letter-spacing: 0.5px; font-size: 13px; }
+    .tag-pill { background: #11241b; border: 1px solid #1f3f30; color: #6ee7b7; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+    .brand-grid { background: #0d1411; border-bottom: 1px solid #1e3329; padding: 6px 10px; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5px; }
+    .brand-tile { height: 30px; border-radius: 4px; font-weight: 800; font-size: 11px; color: #fff; border: 1px solid rgba(255,255,255,0.14); cursor: pointer; opacity: 0.78; transition: 0.15s; text-transform: uppercase; }
+    .brand-tile:hover { opacity: 1; }
+    .brand-tile.active { opacity: 1; outline: 2px solid #f59e0b; box-shadow: 0 0 10px rgba(245,158,11,0.45); }
+    .subbar { background: #0f1714; border-bottom: 1px solid #1f352b; padding: 0 10px; display: flex; align-items: center; justify-content: space-between; min-height: 36px; gap: 8px; }
+    .tabs { display: flex; gap: 4px; }
+    .tab-btn { background: transparent; border: 0; border-bottom: 2px solid transparent; color: #94a3b8; padding: 9px 14px; font-size: 11px; font-weight: 700; cursor: pointer; }
+    .tab-btn.active { background: #182620; color: #fbbf24; border-bottom-color: #f59e0b; }
+    .quick-tools { display: flex; align-items: center; gap: 6px; }
+    .tool-btn { background: #15221c; border: 1px solid #243b30; color: #cbd5e1; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; }
+    .tool-btn:hover { border-color: #10b981; color: #fff; }
+    .workspace { flex: 1; display: flex; min-height: 0; overflow: hidden; }
+    .col-models { width: 285px; min-width: 240px; background: #0c1310; border-right: 1px solid #1e3329; display: flex; flex-direction: column; }
+    .search-box { padding: 8px; border-bottom: 1px solid #1c2e25; }
+    .search-box input { width: 100%; background: #060a08; border: 1px solid #233b30; color: #e2e8f0; padding: 6px 8px; border-radius: 4px; font-size: 11px; outline: none; }
+    .model-list { flex: 1; overflow-y: auto; }
+    .model-item { padding: 8px 10px; border-bottom: 1px solid #14221c; cursor: pointer; border-left: 3px solid transparent; }
+    .model-item:hover { background: #121e19; }
+    .model-item.selected { background: #172821; border-left-color: #f59e0b; }
+    .model-soc { font-size: 10px; font-family: monospace; color: #64748b; }
+    .model-name { font-size: 12px; font-weight: 700; color: #f8fafc; margin: 2px 0 4px; }
+    .mode-badges { display: flex; flex-wrap: wrap; gap: 4px; }
+    .mode-tag { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; background: #064e3b; color: #6ee7b7; border: 1px solid #047857; text-transform: uppercase; }
+    .col-ops { flex: 1; min-width: 340px; background: #101815; border-right: 1px solid #1e3329; display: flex; flex-direction: column; }
+    .subtabs { background: #0b110e; border-bottom: 1px solid #1e3329; padding: 6px 10px; display: flex; align-items: center; justify-content: space-between; }
+    .ops-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .op-card { background: #16211d; border: 1px solid #233830; border-radius: 5px; padding: 11px 13px; text-align: left; color: #e2e8f0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+    .op-card:hover { border-color: #10b981; }
+    .op-card.selected { background: #1c2e26; border-color: #f59e0b; box-shadow: inset 0 0 0 1px rgba(245,158,11,0.35); }
+    .op-title { font-size: 12px; font-weight: 700; color: #fbbf24; }
+    .op-desc { font-size: 11px; color: #94a3b8; margin-top: 3px; }
+    .staged-panel { background: #0b110e; border-top: 1px solid #1f352b; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .do-job-btn { background: linear-gradient(90deg, #10b981, #f59e0b); color: #050a08; border: 0; border-radius: 5px; padding: 10px 20px; font-weight: 900; font-size: 12px; cursor: pointer; letter-spacing: 0.5px; white-space: nowrap; }
+    .do-job-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+    .col-term { width: 440px; min-width: 350px; background: #080c0a; display: flex; flex-direction: column; }
+
+    /* Phase 2 Live Hardware Spec Card */
+    .live-card { background: #0d1612; border-bottom: 1px solid #1e3329; padding: 8px 10px; font-size: 11px; }
+    .live-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 10px; margin-top: 6px; font-family: Consolas, monospace; font-size: 10.5px; }
+    .live-k { color: #64748b; }
+    .live-v { color: #e2e8f0; font-weight: 700; text-align: right; }
+
+    .terminal-out { flex: 1; padding: 10px; overflow-y: auto; font-family: Consolas, "Courier New", monospace; font-size: 11px; line-height: 1.6; color: #cbd5e1; }
+    .term-empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #475569; text-align: center; }
+    .progress-box { background: #0d1411; border-top: 1px solid #1e3329; padding: 9px 10px; }
+    .pbar-track { height: 14px; background: #17231e; border: 1px solid #263b32; border-radius: 3px; overflow: hidden; position: relative; margin-bottom: 5px; }
+    .pbar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #d97706, #f59e0b, #fbbf24); transition: width 0.25s; }
+    .pbar-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px #000; }
+    .stop-btn { background: #1e293b; border: 1px solid #334155; color: #cbd5e1; padding: 0 12px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; }
+    .statusbar { height: 24px; background: #050807; border-top: 1px solid #1a2e24; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: #64748b; }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <div class="titlebar">
+    <div class="brand-group">
+      <span class="logo-badge">M</span>
+      <span class="title-gold">MSP TOOLS</span>
+      <span class="tag-pill">PHASE 2 · LIVE DEVICE & CHIPSET INSPECTOR</span>
+    </div>
+    <span class="tag-pill" id="engineBadge">Checking Engine...</span>
+  </div>
+
+  <div class="brand-grid" id="brandGrid"></div>
+
+  <div class="subbar">
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('FUNCTIONS', this)">FUNCTIONS</button>
+      <button class="tab-btn" onclick="switchTab('BOOT & MODES', this)">BOOT & MODES</button>
+      <button class="tab-btn" onclick="switchTab('FIRMWARE', this)">FIRMWARE</button>
+    </div>
+    <div class="quick-tools">
+      <button class="tool-btn" onclick="scanPorts()">SCAN & DETECT DEVICE</button>
+      <button class="tool-btn" onclick="clearLog()">CLEAR LOG</button>
+    </div>
+  </div>
+
+  <div class="workspace">
+    <section class="col-models">
+      <div class="search-box">
+        <input id="searchInput" placeholder="Search model or chipset..." oninput="renderModels()" />
+      </div>
+      <div class="model-list" id="modelList"></div>
+    </section>
+
+    <section class="col-ops">
+      <div class="subtabs">
+        <span class="tag-pill" id="selectedModelLabel">PROFILE: -</span>
+        <span style="font-size:10px;color:#64748b;">Select function -> Click DO JOB</span>
+      </div>
+      <div class="ops-body" id="opsBody"></div>
+      <div class="staged-panel">
+        <div style="font-size:11px;">
+          <div style="color:#64748b;font-weight:700;">STAGED JOB READY:</div>
+          <div id="stagedJobText" style="color:#94a3b8;font-weight:700;">Select an operation above, then click DO JOB</div>
+        </div>
+        <button class="do-job-btn" id="doJobBtn" disabled onclick="executeDoJob()">▶ DO JOB</button>
+      </div>
+    </section>
+
+    <section class="col-term">
+      <!-- Live Hardware Spec Card -->
+      <div class="live-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:800;color:#fbbf24;">LIVE CONNECTED DEVICE</span>
+          <span class="tag-pill" id="liveTransportBadge">WAITING USB</span>
+        </div>
+        <div class="live-grid">
+          <span class="live-k">Model / Port:</span><span class="live-v" id="liveModel">-</span>
+          <span class="live-k">Codename / SoC:</span><span class="live-v" id="liveSoc">-</span>
+          <span class="live-k">Android / Slot:</span><span class="live-v" id="liveOs">-</span>
+          <span class="live-k">Bootloader:</span><span class="live-v" id="liveBl">-</span>
+        </div>
+      </div>
+
+      <div class="terminal-out" id="terminalOut">
+        <div class="term-empty">
+          <div style="font-weight:700;color:#64748b;">MSP TOOLS PHASE 2 READY</div>
+          <div style="font-size:10px;margin-top:4px;">Connect phone via USB & press <b>▶ DO JOB</b> or <b>SCAN & DETECT DEVICE</b></div>
+        </div>
+      </div>
+      <div class="progress-box">
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;">
+            <div class="pbar-track">
+              <div class="pbar-fill" id="pbar1"></div>
+              <div class="pbar-label" id="plabel1">0 %</div>
+            </div>
+            <div class="pbar-track" style="margin-bottom:0;">
+              <div class="pbar-fill" id="pbar2"></div>
+              <div class="pbar-label" id="plabel2">0 %</div>
+            </div>
+          </div>
+          <button class="stop-btn" onclick="setProgress(0)">STOP</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="statusbar">
+    <span>MSP Tools · https://github.com/KhunMyintAung/MSP_Tools</span>
+    <span>Phase 2: Real Hardware & SoC Identity Engine</span>
+  </div>
+</div>
+
+<script>
+const BRANDS = [
+  { id: "XIAOMI", label: "MI / XIAOMI", color: "#ea580c" },
+  { id: "SAMSUNG", label: "SAMSUNG", color: "#1d4ed8" },
+  { id: "OPPO", label: "OPPO", color: "#15803d" },
+  { id: "VIVO", label: "vivo", color: "#0284c7" },
+  { id: "REALME", label: "realme", color: "#ca8a04" },
+  { id: "TECNO", label: "TECNO", color: "#2563eb" },
+  { id: "INFINIX", label: "Infinix", color: "#16a34a" },
+  { id: "QUALCOMM", label: "Qualcomm EDL", color: "#b91c1c" },
+  { id: "MEDIATEK", label: "MEDIATEK", color: "#0369a1" },
+  { id: "UNISOC", label: "UNISOC / SPD", color: "#7e22ce" }
+];
+
+const MODELS = [
+  { id: "auto-detect", brand: "XIAOMI", name: "Auto-Detect Connected Device", soc: "All Chipsets · Dynamic Hardware Probe", modes: ["adb", "fastboot", "edl", "brom"] },
+  { id: "mi-marble", brand: "XIAOMI", name: "POCO F5 / Redmi Note 12 Turbo", soc: "SM7475-AB · Snapdragon 7+ Gen 2", modes: ["edl", "fastboot", "adb"] },
+  { id: "mi-ruby", brand: "XIAOMI", name: "Redmi Note 12 Pro 5G (ruby)", soc: "MT6877V · Dimensity 1080", modes: ["brom", "preloader", "fastboot"] },
+  { id: "sm-s918b", brand: "SAMSUNG", name: "Galaxy S23 Ultra (SM-S918B)", soc: "SM8550 · Snapdragon 8 Gen 2", modes: ["odin", "adb"] },
+  { id: "sm-a546e", brand: "SAMSUNG", name: "Galaxy A54 5G (SM-A546E)", soc: "S5E8835 · Exynos 1380", modes: ["odin", "adb"] },
+  { id: "oppo-cph2477", brand: "OPPO", name: "OPPO Reno8 T 5G (CPH2477)", soc: "SM6375 · Snapdragon 695", modes: ["edl", "fastboot"] },
+  { id: "vivo-v2250", brand: "VIVO", name: "vivo V27 5G (V2250)", soc: "MT6886 · Dimensity 7200", modes: ["brom", "preloader"] },
+  { id: "rmx-3706", brand: "REALME", name: "realme 11 Pro 5G (RMX3706)", soc: "MT6877V · Dimensity 7050", modes: ["brom", "fastboot"] },
+  { id: "tecno-ck7n", brand: "TECNO", name: "TECNO Camon 20 Pro (CK7n)", soc: "MT6789 · Helio G99", modes: ["brom", "preloader"] },
+  { id: "infinix-x6833b", brand: "INFINIX", name: "Infinix Note 30 (X6833B)", soc: "MT6789 · Helio G99", modes: ["brom", "preloader"] }
+];
+
+const OPERATIONS = [
+  { id: "read-info", tab: "FUNCTIONS", title: "[DIAG] READ REAL DEVICE, SOC & PARTITIONS", desc: "Probe live Brand, Model, Codename, Chipset, Slot & Partition layout", risk: "READ-ONLY" },
+  { id: "check-bl", tab: "FUNCTIONS", title: "[BOOT] CHECK BOOTLOADER & SECURITY PATCH", desc: "Read verified boot state, OEM unlock status & security patch date", risk: "READ-ONLY" },
+  { id: "reboot-edl", tab: "BOOT & MODES", title: "[MODE] REBOOT TO EDL / BROM / DOWNLOAD", desc: "Authorized interface transition from ADB/Fastboot", risk: "AUTHORIZED" },
+  { id: "safe-wipe", tab: "BOOT & MODES", title: "[RESET] SAFE FACTORY RESET (AUTHORIZED)", desc: "Format userdata & cache with owner consent verification", risk: "AUTHORIZED" },
+  { id: "verify-fw", tab: "FIRMWARE", title: "[PKG] VERIFY FIRMWARE & SHA-256 HASH", desc: "Validate Scatter / XML / Tar.md5 / PAC integrity before flashing", risk: "READ-ONLY" }
+];
+
+let selectedBrand = "XIAOMI";
+let selectedModel = MODELS[0];
+let currentTab = "FUNCTIONS";
+let stagedJob = null;
+
+fetch("/api/health").then(r => r.json()).then(d => {
+  if (d.ok) document.getElementById("engineBadge").textContent = `${d.engine} · ${d.phase}`;
+}).catch(() => {
+  document.getElementById("engineBadge").textContent = "SERVER OFFLINE";
+});
+
+function updateLiveDeviceCard(dev) {
+  const badge = document.getElementById("liveTransportBadge");
+  if (!dev || !dev.connected) {
+    badge.textContent = "NO DEVICE";
+    badge.style.color = "#94a3b8";
+    document.getElementById("liveModel").textContent = "-";
+    document.getElementById("liveSoc").textContent = "-";
+    document.getElementById("liveOs").textContent = "-";
+    document.getElementById("liveBl").textContent = "-";
+    return;
+  }
+  badge.textContent = `${dev.transport} (${dev.comPort})`;
+  badge.style.color = "#fbbf24";
+  document.getElementById("liveModel").textContent = `${dev.brand} ${dev.model}`;
+  document.getElementById("liveSoc").textContent = `${dev.codename} · ${dev.chipset}`;
+  document.getElementById("liveOs").textContent = `Android ${dev.androidVersion} (${dev.slot})`;
+  document.getElementById("liveBl").textContent = dev.bootloader;
+}
+
+function setProgress(val) {
+  document.getElementById("pbar1").style.width = val + "%";
+  document.getElementById("pbar2").style.width = val + "%";
+  document.getElementById("plabel1").textContent = val + " %";
+  document.getElementById("plabel2").textContent = val + " %";
+}
+
+function renderBrands() {
+  document.getElementById("brandGrid").innerHTML = BRANDS.map(b => `
+    <button class="brand-tile ${selectedBrand === b.id ? 'active' : ''}"
+            style="background:${b.color}"
+            onclick="selectBrand('${b.id}')">${b.label}</button>
+  `).join("");
+}
+
+function selectBrand(brandId) {
+  selectedBrand = brandId;
+  const first = MODELS.find(m => m.brand === brandId);
+  if (first) selectedModel = first;
+  renderBrands();
+  renderModels();
+}
+
+function renderModels() {
+  const q = document.getElementById("searchInput").value.toLowerCase();
+  const list = MODELS.filter(m => {
+    const brandOk = m.id === "auto-detect" || ["QUALCOMM", "MEDIATEK", "UNISOC"].includes(selectedBrand) ? true : m.brand === selectedBrand;
+    return brandOk && (m.name.toLowerCase().includes(q) || m.soc.toLowerCase().includes(q));
+  });
+
+  document.getElementById("selectedModelLabel").textContent = "PROFILE: " + selectedModel.name;
+  document.getElementById("modelList").innerHTML = list.map(m => `
+    <div class="model-item ${selectedModel.id === m.id ? 'selected' : ''}" onclick="selectModel('${m.id}')">
+      <div class="model-soc">${m.soc}</div>
+      <div class="model-name">${m.name}</div>
+      <div class="mode-badges">${m.modes.map(md => `<span class="mode-tag">${md}</span>`).join("")}</div>
+    </div>
+  `).join("");
+}
+
+function selectModel(id) {
+  const found = MODELS.find(m => m.id === id);
+  if (found) { selectedModel = found; renderModels(); }
+}
+
+function switchTab(tab, btn) {
+  currentTab = tab;
+  document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+  btn.classList.add("active");
+  renderOps();
+}
+
+function renderOps() {
+  const list = OPERATIONS.filter(o => o.tab === currentTab);
+  document.getElementById("opsBody").innerHTML = list.map(o => `
+    <button class="op-card ${stagedJob && stagedJob.id === o.id ? 'selected' : ''}" onclick="stageJob('${o.id}')">
+      <div>
+        <div class="op-title">${o.title}</div>
+        <div class="op-desc">${o.desc}</div>
+      </div>
+      <span class="tag-pill">${o.risk}</span>
+    </button>
+  `).join("");
+}
+
+function stageJob(id) {
+  stagedJob = OPERATIONS.find(o => o.id === id) || null;
+  const txt = document.getElementById("stagedJobText");
+  const btn = document.getElementById("doJobBtn");
+  if (stagedJob) {
+    txt.textContent = stagedJob.title;
+    txt.style.color = "#fbbf24";
+    btn.disabled = false;
+  }
+  renderOps();
+}
+
+function appendLogs(lines) {
+  const term = document.getElementById("terminalOut");
+  term.innerHTML = lines.map(l => `<div>${l}</div>`).join("");
+  term.scrollTop = term.scrollHeight;
+}
+
+function clearLog() {
+  setProgress(0);
+  document.getElementById("terminalOut").innerHTML = `
+    <div class="term-empty">
+      <div style="font-weight:700;color:#64748b;">MSP TOOLS PHASE 2 READY</div>
+      <div style="font-size:10px;margin-top:4px;">Connect phone via USB & press <b>▶ DO JOB</b> or <b>SCAN & DETECT DEVICE</b></div>
+    </div>
+  `;
+}
+
+async function executeDoJob() {
+  if (!stagedJob) return;
+  const btn = document.getElementById("doJobBtn");
+  btn.disabled = true;
+  btn.textContent = "RUNNING...";
+  setProgress(35);
+
+  const header = [
+    "==========================================",
+    "EXECUTING: " + stagedJob.title,
+    "PROFILE: " + selectedModel.name,
+    "=========================================="
+  ];
+  appendLogs(header);
+
+  try {
+    const res = await fetch("/api/execute", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        jobId: stagedJob.id,
+        jobTitle: stagedJob.title,
+        brand: selectedBrand,
+        model: selectedModel.name
+      })
+    });
+    const data = await res.json();
+    setProgress(100);
+    if (data.device) updateLiveDeviceCard(data.device);
+    if (data.ok && data.logs) appendLogs([...header, ...data.logs]);
+  } catch (e) {
+    appendLogs([...header, "[ERROR] Backend error: " + e.message]);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "▶ DO JOB";
+  }
+}
+
+async function scanPorts() {
+  setProgress(45);
+  try {
+    const res = await fetch("/api/scan");
+    const data = await res.json();
+    setProgress(100);
+    if (data.ok) {
+      updateLiveDeviceCard(data.device);
+      const usbList = (data.usbModes && data.usbModes.devices) || [];
+      appendLogs([
+        "[SCAN] Hardware Ports: " + (usbList.length ? usbList.map(d => `${d.mode} (${d.comPort})`).join(", ") : "None"),
+        "[SCAN] ADB: " + (data.adb.output || data.adb.error || "No ADB devices"),
+        "[SCAN] Fastboot: " + (data.fastboot.output || data.fastboot.error || "No Fastboot devices")
+      ]);
+    }
+  } catch (e) {
+    appendLogs(["[ERROR] Port scan failed: " + e.message]);
+  }
+}
+
+renderBrands();
+renderModels();
+renderOps();
+</script>
+</body>
+</html>
