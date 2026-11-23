@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/src/Security/CommandAllowlist.php';
 require_once __DIR__ . '/src/Discovery/WindowsUsbScanner.php';
+require_once __DIR__ . '/src/Discovery/DeviceIdentityReader.php';
 
 use MspTools\Security\CommandAllowlist;
 use MspTools\Discovery\WindowsUsbScanner;
+use MspTools\Discovery\DeviceIdentityReader;
 
 header('Content-Type: application/json; charset=utf-8');
 $uri = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH);
@@ -14,7 +16,16 @@ if ($uri === '/api/health') {
     echo json_encode([
         'ok'     => true,
         'engine' => 'PHP ' . PHP_VERSION,
-        'os'     => PHP_OS_FAMILY
+        'phase'  => 'Auto-Detect Active'
+    ]);
+    exit;
+}
+
+if ($uri === '/api/device-info') {
+    $fullUsb = ($_GET['usb'] ?? '0') === '1';
+    echo json_encode([
+        'ok'     => true,
+        'device' => (new DeviceIdentityReader())->read($fullUsb)
     ]);
     exit;
 }
@@ -25,6 +36,7 @@ if ($uri === '/api/scan') {
         'adb'       => CommandAllowlist::run('adb_devices'),
         'fastboot'  => CommandAllowlist::run('fastboot_devices'),
         'usbModes'  => (new WindowsUsbScanner())->scan(),
+        'device'    => (new DeviceIdentityReader())->read(true),
         'scannedAt' => gmdate('c')
     ]);
     exit;
@@ -32,39 +44,47 @@ if ($uri === '/api/scan') {
 
 if ($uri === '/api/execute' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $payload = json_decode((string)file_get_contents('php://input'), true) ?: [];
+    $jobId = (string)($payload['jobId'] ?? 'read-info');
     $jobTitle = (string)($payload['jobTitle'] ?? 'Diagnostic Job');
-    $brand = (string)($payload['brand'] ?? 'Unknown');
-    $model = (string)($payload['model'] ?? 'Unknown');
 
     $logs = [
-        "Dispatched [{$jobTitle}] to PHP Engine (" . PHP_VERSION . ")",
-        "Target Profile: {$brand} -> {$model}",
-        'Checking USB Hardware Ports (EDL / BROM / Preloader / Odin / SPD)...',
+        'Engine: PHP ' . PHP_VERSION,
+        "Executing Task: {$jobTitle}..."
     ];
 
-    $usb = (new WindowsUsbScanner())->scan();
-    $adb = CommandAllowlist::run('adb_devices');
-    $fastboot = CommandAllowlist::run('fastboot_devices');
+    $identity = (new DeviceIdentityReader())->read(true);
 
-    if (!empty($usb['devices'])) {
-        foreach ($usb['devices'] as $dev) {
-            $logs[] = "FOUND USB PORT: {$dev['chipset']} | {$dev['mode']} -> {$dev['name']}";
-        }
-    } else {
-        $logs[] = 'USB Hardware Ports: No EDL / BROM / Odin port detected.';
+    if (empty($identity['connected'])) {
+        $logs[] = '[WARN] No active ADB / Fastboot / EDL / BROM device connected.';
+        echo json_encode(['ok' => true, 'device' => $identity, 'logs' => $logs]);
+        exit;
     }
 
-    $logs[] = $adb['ok'] && $adb['output'] !== ''
-        ? 'ADB Interface: ' . str_replace(["\r", "\n"], ' | ', $adb['output'])
-        : 'ADB Interface: ' . ($adb['error'] ?: 'No ADB device connected.');
+    $logs[] = "[ACTIVE MODE: {$identity['mode']}] Serial: {$identity['serial']} ({$identity['comPort']})";
+    $logs[] = "  • Brand / Platform     : {$identity['brand']}";
+    $logs[] = "  • Model / Product      : {$identity['model']}";
+    $logs[] = "  • Codename             : {$identity['codename']}";
+    $logs[] = "  • Chipset / SoC        : {$identity['chipset']}";
+    $logs[] = "  • OS / Mode            : {$identity['androidVersion']}";
+    $logs[] = "  • Active Slot          : {$identity['slot']}";
+    $logs[] = "  • Bootloader State     : {$identity['bootloader']}";
+    if (($identity['antiRollback'] ?? '-') !== '-') {
+        $logs[] = "  • Anti-Rollback (ARB)  : {$identity['antiRollback']}";
+    }
 
-    $logs[] = $fastboot['ok'] && $fastboot['output'] !== ''
-        ? 'Fastboot Interface: ' . str_replace(["\r", "\n"], ' | ', $fastboot['output'])
-        : 'Fastboot Interface: ' . ($fastboot['error'] ?: 'No Fastboot device connected.');
+    if ($jobId === 'read-info' && $identity['mode'] === 'ADB') {
+        $partRes = CommandAllowlist::run('adb_partitions');
+        if ($partRes['ok'] && $partRes['output'] !== '') {
+            $lines = array_slice(array_filter(preg_split('/\r\n|\r|\n/', $partRes['output'])), 0, 12);
+            $logs[] = '  • Block Partitions (Top entries):';
+            foreach ($lines as $l) {
+                $logs[] = "      {$l}";
+            }
+        }
+    }
 
-    $logs[] = 'Operation finished successfully (Phase 1 Read-Only Safe Mode).';
-
-    echo json_encode(['ok' => true, 'logs' => $logs]);
+    $logs[] = '[OK] Operation completed.';
+    echo json_encode(['ok' => true, 'device' => $identity, 'logs' => $logs]);
     exit;
 }
 

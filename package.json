@@ -1,8 +1,8 @@
 {
   "name": "msp-tools",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "private": true,
-  "description": "MSP Tools - Multi-Brand Mobile Service Platform (Node.js + PHP Dual Engine)",
+  "description": "MSP Tools - Real-Time Auto-Detect Multi-Brand Mobile Service Platform",
   "scripts": {
     "start": "node node-engine/server.js",
     "php": "php -S 127.0.0.1:8910 -t public php-engine/router.php"

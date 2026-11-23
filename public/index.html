@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MSP Tools — Multi-Brand Mobile Service Platform</title>
+  <title>MSP Tools — Auto-Detect Mobile Service Platform</title>
   <style>
     * { box-sizing: border-box; }
     html, body { height: 100%; margin: 0; background: #080d0b; color: #e2e8f0; font-family: "Segoe UI", system-ui, sans-serif; overflow: hidden; }
@@ -13,6 +13,9 @@
     .logo-badge { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid #f59e0b; background: radial-gradient(circle, #10b981, #064e3b); display: grid; place-items: center; font-weight: 900; font-size: 12px; color: #fde68a; }
     .title-gold { font-weight: 800; color: #f59e0b; letter-spacing: 0.5px; font-size: 13px; }
     .tag-pill { background: #11241b; border: 1px solid #1f3f30; color: #6ee7b7; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+    .mode-pill-adb { background: #064e3b; border: 1px solid #10b981; color: #6ee7b7; padding: 2px 9px; border-radius: 4px; font-size: 10.5px; font-weight: 800; }
+    .mode-pill-fb { background: #451a03; border: 1px solid #f59e0b; color: #fcd34d; padding: 2px 9px; border-radius: 4px; font-size: 10.5px; font-weight: 800; }
+    .mode-pill-hw { background: #450a0a; border: 1px solid #ef4444; color: #fca5a5; padding: 2px 9px; border-radius: 4px; font-size: 10.5px; font-weight: 800; }
     .brand-grid { background: #0d1411; border-bottom: 1px solid #1e3329; padding: 6px 10px; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5px; }
     .brand-tile { height: 30px; border-radius: 4px; font-weight: 800; font-size: 11px; color: #fff; border: 1px solid rgba(255,255,255,0.14); cursor: pointer; opacity: 0.78; transition: 0.15s; text-transform: uppercase; }
     .brand-tile:hover { opacity: 1; }
@@ -24,8 +27,9 @@
     .quick-tools { display: flex; align-items: center; gap: 6px; }
     .tool-btn { background: #15221c; border: 1px solid #243b30; color: #cbd5e1; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; }
     .tool-btn:hover { border-color: #10b981; color: #fff; }
+    .tool-btn.auto-on { background: #064e3b; border-color: #10b981; color: #6ee7b7; }
     .workspace { flex: 1; display: flex; min-height: 0; overflow: hidden; }
-    .col-models { width: 290px; min-width: 240px; background: #0c1310; border-right: 1px solid #1e3329; display: flex; flex-direction: column; }
+    .col-models { width: 285px; min-width: 240px; background: #0c1310; border-right: 1px solid #1e3329; display: flex; flex-direction: column; }
     .search-box { padding: 8px; border-bottom: 1px solid #1c2e25; }
     .search-box input { width: 100%; background: #060a08; border: 1px solid #233b30; color: #e2e8f0; padding: 6px 8px; border-radius: 4px; font-size: 11px; outline: none; }
     .model-list { flex: 1; overflow-y: auto; }
@@ -47,11 +51,14 @@
     .staged-panel { background: #0b110e; border-top: 1px solid #1f352b; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .do-job-btn { background: linear-gradient(90deg, #10b981, #f59e0b); color: #050a08; border: 0; border-radius: 5px; padding: 10px 20px; font-weight: 900; font-size: 12px; cursor: pointer; letter-spacing: 0.5px; white-space: nowrap; }
     .do-job-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-    .col-term { width: 420px; min-width: 340px; background: #080c0a; display: flex; flex-direction: column; }
-    .port-bar { background: #0e1613; border-bottom: 1px solid #1e3329; padding: 7px 10px; display: flex; flex-direction: column; gap: 5px; font-size: 11px; }
-    .port-row { display: flex; align-items: center; justify-content: space-between; }
+    .col-term { width: 450px; min-width: 350px; background: #080c0a; display: flex; flex-direction: column; }
+
+    .live-card { background: #0d1612; border-bottom: 1px solid #1e3329; padding: 9px 11px; font-size: 11px; }
+    .live-grid { display: grid; grid-template-columns: 115px 1fr; gap: 4px 10px; margin-top: 7px; font-family: Consolas, monospace; font-size: 11px; }
+    .live-k { color: #64748b; }
+    .live-v { color: #f8fafc; font-weight: 700; text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
     .terminal-out { flex: 1; padding: 10px; overflow-y: auto; font-family: Consolas, "Courier New", monospace; font-size: 11px; line-height: 1.6; color: #cbd5e1; }
-    .term-empty { height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #475569; text-align: center; }
     .progress-box { background: #0d1411; border-top: 1px solid #1e3329; padding: 9px 10px; }
     .pbar-track { height: 14px; background: #17231e; border: 1px solid #263b32; border-radius: 3px; overflow: hidden; position: relative; margin-bottom: 5px; }
     .pbar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #d97706, #f59e0b, #fbbf24); transition: width 0.25s; }
@@ -66,7 +73,7 @@
     <div class="brand-group">
       <span class="logo-badge">M</span>
       <span class="title-gold">MSP TOOLS</span>
-      <span class="tag-pill">NODE.JS + PHP DUAL ENGINE</span>
+      <span class="tag-pill" id="topModeBadge">WAITING USB...</span>
     </div>
     <span class="tag-pill" id="engineBadge">Checking Engine...</span>
   </div>
@@ -80,7 +87,8 @@
       <button class="tab-btn" onclick="switchTab('FIRMWARE', this)">FIRMWARE</button>
     </div>
     <div class="quick-tools">
-      <button class="tool-btn" onclick="scanPorts()">SCAN PORTS</button>
+      <button class="tool-btn auto-on" id="autoToggleBtn" onclick="toggleAutoDetect()">AUTO-DETECT: ON</button>
+      <button class="tool-btn" onclick="scanPorts()">FORCE SCAN</button>
       <button class="tool-btn" onclick="clearLog()">CLEAR LOG</button>
     </div>
   </div>
@@ -95,7 +103,7 @@
 
     <section class="col-ops">
       <div class="subtabs">
-        <span class="tag-pill" id="selectedModelLabel">SELECTED: -</span>
+        <span class="tag-pill" id="selectedModelLabel">TARGET: Auto-Detect Connected Device</span>
         <span style="font-size:10px;color:#64748b;">Select function -> Click DO JOB</span>
       </div>
       <div class="ops-body" id="opsBody"></div>
@@ -109,22 +117,23 @@
     </section>
 
     <section class="col-term">
-      <div class="port-bar">
-        <div class="port-row">
-          <span style="color:#94a3b8;font-weight:700;">USB:</span>
-          <span id="usbStatusText" style="color:#6ee7b7;">Ready (EDL / BROM / Odin / ADB)</span>
+      <div class="live-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:800;color:#fbbf24;">LIVE CONNECTED DEVICE</span>
+          <span class="tag-pill" id="liveTransportBadge">WAITING USB</span>
         </div>
-        <div class="port-row">
-          <span style="color:#94a3b8;font-weight:700;">BACKEND:</span>
-          <span id="backendInfo">/api/* (Unified Local & Web API)</span>
-        </div>
-      </div>
-      <div class="terminal-out" id="terminalOut">
-        <div class="term-empty">
-          <div style="font-weight:700;color:#64748b;">MSP TOOLS CONSOLE IDLE</div>
-          <div style="font-size:10px;margin-top:4px;">Select a model & function, then press <b>▶ DO JOB</b></div>
+        <div class="live-grid">
+          <span class="live-k">Active Mode:</span><span class="live-v" id="liveMode">-</span>
+          <span class="live-k">Serial / Port:</span><span class="live-v" id="liveSerial">-</span>
+          <span class="live-k">Model / Product:</span><span class="live-v" id="liveModel">-</span>
+          <span class="live-k">Codename / SoC:</span><span class="live-v" id="liveSoc">-</span>
+          <span class="live-k">OS / Active Slot:</span><span class="live-v" id="liveOs">-</span>
+          <span class="live-k">Bootloader / ARB:</span><span class="live-v" id="liveBl">-</span>
         </div>
       </div>
+
+      <div class="terminal-out" id="terminalOut"></div>
+
       <div class="progress-box">
         <div style="display:flex;gap:8px;">
           <div style="flex:1;">
@@ -145,7 +154,7 @@
 
   <div class="statusbar">
     <span>MSP Tools · https://github.com/KhunMyintAung/MSP_Tools</span>
-    <span>Node.js & PHP Dual-Runtime Service Platform</span>
+    <span>Auto-Detect Engine: ADB / Fastboot / EDL / BROM / Odin</span>
   </div>
 </div>
 
@@ -164,6 +173,7 @@ const BRANDS = [
 ];
 
 const MODELS = [
+  { id: "auto-detect", brand: "XIAOMI", name: "Auto-Detect Connected Device", soc: "Live ADB / Fastboot / EDL / BROM", modes: ["adb", "fastboot", "edl", "brom"] },
   { id: "mi-marble", brand: "XIAOMI", name: "POCO F5 / Redmi Note 12 Turbo", soc: "SM7475-AB · Snapdragon 7+ Gen 2", modes: ["edl", "fastboot", "adb"] },
   { id: "mi-ruby", brand: "XIAOMI", name: "Redmi Note 12 Pro 5G (ruby)", soc: "MT6877V · Dimensity 1080", modes: ["brom", "preloader", "fastboot"] },
   { id: "sm-s918b", brand: "SAMSUNG", name: "Galaxy S23 Ultra (SM-S918B)", soc: "SM8550 · Snapdragon 8 Gen 2", modes: ["odin", "adb"] },
@@ -176,8 +186,8 @@ const MODELS = [
 ];
 
 const OPERATIONS = [
-  { id: "read-info", tab: "FUNCTIONS", title: "[DIAG] READ FULL DEVICE & GPT INFO", desc: "Read Model, Chipset, Anti-Rollback & Partition Table", risk: "READ-ONLY" },
-  { id: "check-bl", tab: "FUNCTIONS", title: "[BOOT] CHECK BOOTLOADER & SECURITY STATE", desc: "Verify OEM unlock state and firmware build metadata", risk: "READ-ONLY" },
+  { id: "read-info", tab: "FUNCTIONS", title: "[DIAG] READ FULL DEVICE, SOC & PARTITIONS", desc: "Read Model, Codename, Chipset, Slot, Anti-Rollback & Partition layout", risk: "READ-ONLY" },
+  { id: "check-bl", tab: "FUNCTIONS", title: "[BOOT] CHECK BOOTLOADER & SECURITY PATCH", desc: "Verify OEM unlock state, verified boot & security patch date", risk: "READ-ONLY" },
   { id: "reboot-edl", tab: "BOOT & MODES", title: "[MODE] REBOOT TO EDL / BROM / DOWNLOAD", desc: "Authorized interface transition from ADB/Fastboot", risk: "AUTHORIZED" },
   { id: "safe-wipe", tab: "BOOT & MODES", title: "[RESET] SAFE FACTORY RESET (AUTHORIZED)", desc: "Format userdata & cache with owner consent verification", risk: "AUTHORIZED" },
   { id: "verify-fw", tab: "FIRMWARE", title: "[PKG] VERIFY FIRMWARE & SHA-256 HASH", desc: "Validate Scatter / XML / Tar.md5 / PAC integrity before flashing", risk: "READ-ONLY" }
@@ -188,14 +198,35 @@ let selectedModel = MODELS[0];
 let currentTab = "FUNCTIONS";
 let stagedJob = null;
 
+let autoDetectEnabled = true;
+let isPolling = false;
+let pollCounter = 0;
+let lastDeviceSignature = "INIT";
+
 fetch("/api/health").then(r => r.json()).then(d => {
-  if (d.ok) {
-    document.getElementById("engineBadge").textContent = d.engine + " ONLINE";
-    document.getElementById("backendInfo").textContent = "Active Runtime: " + d.engine;
-  }
+  if (d.ok) document.getElementById("engineBadge").textContent = `${d.engine} · ${d.phase}`;
 }).catch(() => {
   document.getElementById("engineBadge").textContent = "SERVER OFFLINE";
 });
+
+function nowTime() {
+  return new Date().toTimeString().split(" ")[0];
+}
+
+function addConsoleLine(text, color = "#cbd5e1") {
+  const term = document.getElementById("terminalOut");
+  const div = document.createElement("div");
+  div.style.color = color;
+  div.textContent = text;
+  term.appendChild(div);
+  term.scrollTop = term.scrollHeight;
+}
+
+function clearLog() {
+  setProgress(0);
+  document.getElementById("terminalOut").innerHTML = "";
+  addConsoleLine(`[${nowTime()}] Console cleared. Auto-Detect watching USB (ADB / Fastboot / EDL / BROM)...`, "#64748b");
+}
 
 function setProgress(val) {
   document.getElementById("pbar1").style.width = val + "%";
@@ -203,6 +234,110 @@ function setProgress(val) {
   document.getElementById("plabel1").textContent = val + " %";
   document.getElementById("plabel2").textContent = val + " %";
 }
+
+function applyDetectedDevice(dev, logTransitions = true) {
+  const topBadge = document.getElementById("topModeBadge");
+  const cardBadge = document.getElementById("liveTransportBadge");
+  const targetLabel = document.getElementById("selectedModelLabel");
+
+  if (!dev || !dev.connected) {
+    const sig = "DISCONNECTED";
+    if (logTransitions && lastDeviceSignature !== "INIT" && lastDeviceSignature !== sig) {
+      addConsoleLine(`[${nowTime()}] [AUTO-DETECT] USB Device disconnected.`, "#f87171");
+      setProgress(0);
+    }
+    lastDeviceSignature = sig;
+
+    topBadge.className = "tag-pill";
+    topBadge.textContent = "WAITING USB...";
+    cardBadge.className = "tag-pill";
+    cardBadge.textContent = "NO DEVICE";
+
+    document.getElementById("liveMode").textContent = "-";
+    document.getElementById("liveSerial").textContent = "-";
+    document.getElementById("liveModel").textContent = "-";
+    document.getElementById("liveSoc").textContent = "-";
+    document.getElementById("liveOs").textContent = "-";
+    document.getElementById("liveBl").textContent = "-";
+    targetLabel.textContent = "TARGET: " + selectedModel.name;
+    return;
+  }
+
+  const mode = (dev.mode || dev.transport || "CONNECTED").toUpperCase();
+  const sig = `${mode}|${dev.serial}|${dev.model}|${dev.bootloader}`;
+
+  let pillClass = "mode-pill-hw";
+  let logColor = "#fca5a5";
+  if (mode.includes("ADB")) {
+    pillClass = "mode-pill-adb";
+    logColor = "#34d399";
+  } else if (mode.includes("FASTBOOT")) {
+    pillClass = "mode-pill-fb";
+    logColor = "#fbbf24";
+  }
+
+  topBadge.className = pillClass;
+  topBadge.textContent = `${mode} CONNECTED`;
+
+  cardBadge.className = pillClass;
+  cardBadge.textContent = `${mode} (${dev.comPort})`;
+
+  document.getElementById("liveMode").textContent = mode;
+  document.getElementById("liveSerial").textContent = `${dev.serial} (${dev.comPort})`;
+  document.getElementById("liveModel").textContent = `${dev.brand} · ${dev.model}`;
+  document.getElementById("liveSoc").textContent = `${dev.codename} · ${dev.chipset}`;
+  document.getElementById("liveOs").textContent = `${dev.androidVersion} (${dev.slot})`;
+  document.getElementById("liveBl").textContent = dev.antiRollback && dev.antiRollback !== "-"
+    ? `${dev.bootloader} (ARB: ${dev.antiRollback})`
+    : dev.bootloader;
+
+  targetLabel.textContent = `LIVE [${mode}]: ${dev.model}`;
+
+  if (BRANDS.some(b => b.id === dev.brand) && selectedBrand !== dev.brand) {
+    selectedBrand = dev.brand;
+    renderBrands();
+    renderModels();
+  }
+
+  if (logTransitions && sig !== lastDeviceSignature) {
+    lastDeviceSignature = sig;
+    setProgress(100);
+    addConsoleLine(
+      `[${nowTime()}] [AUTO-DETECT] ${mode} -> Serial: ${dev.serial} | Product: ${dev.model} | SoC: ${dev.chipset} | BL: ${dev.bootloader}`,
+      logColor
+    );
+  }
+}
+
+async function pollDeviceNow(forceUsb = false) {
+  if (isPolling) return;
+  isPolling = true;
+  try {
+    pollCounter++;
+    const checkUsb = forceUsb || (pollCounter % 3 === 1);
+    const res = await fetch(`/api/device-info?usb=${checkUsb ? "1" : "0"}`);
+    const data = await res.json();
+    if (data.ok) {
+      applyDetectedDevice(data.device, true);
+    }
+  } catch {
+    // ignore transient poll failure
+  } finally {
+    isPolling = false;
+  }
+}
+
+function toggleAutoDetect() {
+  autoDetectEnabled = !autoDetectEnabled;
+  const btn = document.getElementById("autoToggleBtn");
+  btn.textContent = autoDetectEnabled ? "AUTO-DETECT: ON" : "AUTO-DETECT: OFF";
+  btn.classList.toggle("auto-on", autoDetectEnabled);
+  if (autoDetectEnabled) pollDeviceNow(true);
+}
+
+setInterval(() => {
+  if (autoDetectEnabled) pollDeviceNow(false);
+}, 1800);
 
 function renderBrands() {
   document.getElementById("brandGrid").innerHTML = BRANDS.map(b => `
@@ -214,8 +349,6 @@ function renderBrands() {
 
 function selectBrand(brandId) {
   selectedBrand = brandId;
-  const first = MODELS.find(m => m.brand === brandId);
-  if (first) selectedModel = first;
   renderBrands();
   renderModels();
 }
@@ -223,11 +356,10 @@ function selectBrand(brandId) {
 function renderModels() {
   const q = document.getElementById("searchInput").value.toLowerCase();
   const list = MODELS.filter(m => {
-    const brandOk = ["QUALCOMM", "MEDIATEK", "UNISOC"].includes(selectedBrand) ? true : m.brand === selectedBrand;
+    const brandOk = m.id === "auto-detect" || ["QUALCOMM", "MEDIATEK", "UNISOC"].includes(selectedBrand) ? true : m.brand === selectedBrand;
     return brandOk && (m.name.toLowerCase().includes(q) || m.soc.toLowerCase().includes(q));
   });
 
-  document.getElementById("selectedModelLabel").textContent = "SELECTED: " + selectedModel.name;
   document.getElementById("modelList").innerHTML = list.map(m => `
     <div class="model-item ${selectedModel.id === m.id ? 'selected' : ''}" onclick="selectModel('${m.id}')">
       <div class="model-soc">${m.soc}</div>
@@ -239,7 +371,11 @@ function renderModels() {
 
 function selectModel(id) {
   const found = MODELS.find(m => m.id === id);
-  if (found) { selectedModel = found; renderModels(); }
+  if (found) {
+    selectedModel = found;
+    document.getElementById("selectedModelLabel").textContent = "TARGET: " + selectedModel.name;
+    renderModels();
+  }
 }
 
 function switchTab(tab, btn) {
@@ -274,22 +410,6 @@ function stageJob(id) {
   renderOps();
 }
 
-function appendLogs(lines) {
-  const term = document.getElementById("terminalOut");
-  term.innerHTML = lines.map(l => `<div>${l}</div>`).join("");
-  term.scrollTop = term.scrollHeight;
-}
-
-function clearLog() {
-  setProgress(0);
-  document.getElementById("terminalOut").innerHTML = `
-    <div class="term-empty">
-      <div style="font-weight:700;color:#64748b;">MSP TOOLS CONSOLE IDLE</div>
-      <div style="font-size:10px;margin-top:4px;">Select a model & function, then press <b>▶ DO JOB</b></div>
-    </div>
-  `;
-}
-
 async function executeDoJob() {
   if (!stagedJob) return;
   const btn = document.getElementById("doJobBtn");
@@ -297,13 +417,8 @@ async function executeDoJob() {
   btn.textContent = "RUNNING...";
   setProgress(35);
 
-  const header = [
-    "==========================================",
-    "EXECUTING: " + stagedJob.title,
-    "TARGET: " + selectedModel.name + " (" + selectedModel.soc + ")",
-    "=========================================="
-  ];
-  appendLogs(header);
+  addConsoleLine("==========================================", "#475569");
+  addConsoleLine(`[${nowTime()}] EXECUTING: ${stagedJob.title}`, "#fbbf24");
 
   try {
     const res = await fetch("/api/execute", {
@@ -318,9 +433,12 @@ async function executeDoJob() {
     });
     const data = await res.json();
     setProgress(100);
-    if (data.ok && data.logs) appendLogs([...header, ...data.logs]);
+    if (data.device) applyDetectedDevice(data.device, false);
+    if (data.ok && data.logs) {
+      for (const l of data.logs) addConsoleLine(l, "#e2e8f0");
+    }
   } catch (e) {
-    appendLogs([...header, "[ERROR] Backend error: " + e.message]);
+    addConsoleLine("[ERROR] Backend error: " + e.message, "#f87171");
   } finally {
     btn.disabled = false;
     btn.textContent = "▶ DO JOB";
@@ -329,30 +447,28 @@ async function executeDoJob() {
 
 async function scanPorts() {
   setProgress(45);
+  addConsoleLine(`[${nowTime()}] [FORCE SCAN] Probing ADB, Fastboot & USB Hardware Ports...`, "#38bdf8");
   try {
     const res = await fetch("/api/scan");
     const data = await res.json();
     setProgress(100);
     if (data.ok) {
+      applyDetectedDevice(data.device, false);
       const usbList = (data.usbModes && data.usbModes.devices) || [];
-      document.getElementById("usbStatusText").textContent = usbList.length
-        ? usbList.map(d => d.mode).join(", ")
-        : "No EDL/BROM/Odin port active";
-
-      appendLogs([
-        "[SCAN] USB Hardware Ports: " + (usbList.length ? JSON.stringify(usbList) : "None"),
-        "[SCAN] ADB: " + (data.adb.output || data.adb.error || "No ADB devices"),
-        "[SCAN] Fastboot: " + (data.fastboot.output || data.fastboot.error || "No Fastboot devices")
-      ]);
+      addConsoleLine(`  • USB Ports : ${usbList.length ? usbList.map(d => `${d.mode} (${d.comPort})`).join(", ") : "None"}`);
+      addConsoleLine(`  • ADB       : ${data.adb.output || data.adb.error || "None"}`);
+      addConsoleLine(`  • Fastboot  : ${data.fastboot.output || data.fastboot.error || "None"}`);
     }
   } catch (e) {
-    appendLogs(["[ERROR] Port scan failed: " + e.message]);
+    addConsoleLine("[ERROR] Scan failed: " + e.message, "#f87171");
   }
 }
 
 renderBrands();
 renderModels();
 renderOps();
+addConsoleLine(`[${nowTime()}] MSP Tools Auto-Detect Ready. Watching USB ports automatically...`, "#34d399");
+pollDeviceNow(true);
 </script>
 </body>
 </html>
