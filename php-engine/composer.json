@@ -1,0 +1,13 @@
+{
+  "name": "khunmyintaung/msp-tools-php-engine",
+  "description": "Local PHP 8.2+ Service Engine for MSP Tools",
+  "type": "project",
+  "require": {
+    "php": ">=8.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "MspTools\\": "src/"
+    }
+  }
+}

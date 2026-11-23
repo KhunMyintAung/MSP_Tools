@@ -1,0 +1,28 @@
+{
+  "name": "msp-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MSP Tools - Multi-Brand Mobile Service Platform (Electron + React + PHP 8.3 Engine)",
+  "main": "out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "lucide-react": "^0.475.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "electron": "^36.0.0",
+    "electron-vite": "^4.0.0",
+    "typescript": "^5.8.0",
+    "vite": "^6.0.0"
+  }
+}
