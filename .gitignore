@@ -1,8 +1,5 @@
 node_modules/
-out/
-dist/
-release/
-php-engine/vendor/
+vendor/
 *.log
 .DS_Store
 .env

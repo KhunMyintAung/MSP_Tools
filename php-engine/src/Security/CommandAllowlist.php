@@ -8,8 +8,6 @@ final class CommandAllowlist
     private const ALLOWED_COMMANDS = [
         'adb_devices'      => ['adb', 'devices', '-l'],
         'fastboot_devices' => ['fastboot', 'devices'],
-        'adb_getprop'      => ['adb', 'shell', 'getprop'],
-        'fastboot_getvar'  => ['fastboot', 'getvar', 'all'],
         'win_usb_ports'    => [
             'powershell',
             '-NoProfile',
@@ -21,28 +19,15 @@ final class CommandAllowlist
     public static function run(string $commandKey, int $timeoutSeconds = 8): array
     {
         if (!isset(self::ALLOWED_COMMANDS[$commandKey])) {
-            return [
-                'ok'     => false,
-                'output' => '',
-                'error'  => "Command '{$commandKey}' is not in the security allowlist."
-            ];
+            return ['ok' => false, 'output' => '', 'error' => "Command '{$commandKey}' not allowed."];
         }
 
         $cmdArray = self::ALLOWED_COMMANDS[$commandKey];
-        $descriptors = [
-            0 => ['pipe', 'r'],
-            1 => ['pipe', 'w'],
-            2 => ['pipe', 'w'],
-        ];
-
+        $descriptors = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
         $process = @proc_open($cmdArray, $descriptors, $pipes, null, null, ['bypass_shell' => true]);
 
         if (!is_resource($process)) {
-            return [
-                'ok'     => false,
-                'output' => '',
-                'error'  => "Unable to execute '{$cmdArray[0]}'. Verify it is installed and available in system PATH."
-            ];
+            return ['ok' => false, 'output' => '', 'error' => "'{$cmdArray[0]}' not found in system PATH."];
         }
 
         fclose($pipes[0]);
@@ -58,33 +43,25 @@ final class CommandAllowlist
             $stdout .= stream_get_contents($pipes[1]);
             $stderr .= stream_get_contents($pipes[2]);
 
-            if (!$status['running']) {
-                break;
-            }
-
+            if (!$status['running']) break;
             if ((time() - $start) >= $timeoutSeconds) {
                 proc_terminate($process, 9);
                 fclose($pipes[1]);
                 fclose($pipes[2]);
                 proc_close($process);
-                return [
-                    'ok'     => false,
-                    'output' => trim($stdout),
-                    'error'  => "Command '{$commandKey}' timed out after {$timeoutSeconds}s."
-                ];
+                return ['ok' => false, 'output' => trim($stdout), 'error' => "Timed out after {$timeoutSeconds}s."];
             }
-
             usleep(40000);
         }
 
         fclose($pipes[1]);
         fclose($pipes[2]);
-        $exitCode = proc_close($process);
+        $code = proc_close($process);
 
         return [
-            'ok'     => $exitCode === 0,
+            'ok'     => $code === 0,
             'output' => trim($stdout),
-            'error'  => $exitCode === 0 ? null : (trim($stderr) ?: "{$cmdArray[0]} exited with code {$exitCode}")
+            'error'  => $code === 0 ? null : (trim($stderr) ?: "{$cmdArray[0]} exited with code {$code}")
         ];
     }
 }

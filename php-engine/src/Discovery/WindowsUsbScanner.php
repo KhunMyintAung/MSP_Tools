@@ -24,13 +24,8 @@ final class WindowsUsbScanner
         }
 
         $decoded = json_decode($raw['output'], true);
-        if (!is_array($decoded)) {
-            return ['ok' => true, 'devices' => [], 'error' => null];
-        }
-
-        if (isset($decoded['InstanceId'])) {
-            $decoded = [$decoded];
-        }
+        if (!is_array($decoded)) return ['ok' => true, 'devices' => [], 'error' => null];
+        if (isset($decoded['InstanceId'])) $decoded = [$decoded];
 
         $matched = [];
         foreach ($decoded as $item) {
@@ -48,11 +43,6 @@ final class WindowsUsbScanner
                 }
             }
         }
-
-        return [
-            'ok'      => true,
-            'devices' => $matched,
-            'error'   => null
-        ];
+        return ['ok' => true, 'devices' => $matched, 'error' => null];
     }
 }
