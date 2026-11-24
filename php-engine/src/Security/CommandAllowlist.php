@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 declare(strict_types=1);
 
 namespace MspTools\Security;
@@ -6,12 +6,12 @@ namespace MspTools\Security;
 final class CommandAllowlist
 {
     private const ALLOWED_COMMANDS = [
-        'adb_devices'        => ['adb', 'devices', '-l'],
-        'adb_getprop'        => ['adb', 'shell', 'getprop'],
-        'adb_partitions'     => ['adb', 'shell', 'cat', '/proc/partitions'],
-        'fastboot_devices'   => ['fastboot', 'devices'],
-        'fastboot_getvar'    => ['fastboot', 'getvar', 'all'],
-        'win_usb_ports'      => [
+        'adb_devices'      => ['adb', 'devices', '-l'],
+        'adb_getprop'      => ['adb', 'shell', 'getprop'],
+        'adb_partitions'   => ['adb', 'shell', 'cat', '/proc/partitions'],
+        'fastboot_devices' => ['fastboot', 'devices'],
+        'fastboot_getvar'  => ['fastboot', 'getvar', 'all'],
+        'win_usb_ports'    => [
             'powershell',
             '-NoProfile',
             '-Command',
@@ -59,13 +59,20 @@ final class CommandAllowlist
             $stdout .= stream_get_contents($pipes[1]);
             $stderr .= stream_get_contents($pipes[2]);
 
-            if (!$status['running']) break;
+            if (!$status['running']) {
+                break;
+            }
             if ((time() - $start) >= $timeoutSeconds) {
                 proc_terminate($process, 9);
                 fclose($pipes[1]);
                 fclose($pipes[2]);
                 proc_close($process);
-                return ['ok' => false, 'output' => trim($stdout), 'stderr' => trim($stderr), 'error' => "Timed out after {$timeoutSeconds}s."];
+                return [
+                    'ok' => false,
+                    'output' => trim($stdout),
+                    'stderr' => trim($stderr),
+                    'error' => "Timed out after {$timeoutSeconds}s."
+                ];
             }
             usleep(30000);
         }
@@ -78,7 +85,7 @@ final class CommandAllowlist
             'ok'     => $code === 0,
             'output' => trim($stdout),
             'stderr' => trim($stderr),
-            'error'  => $code === 0 ? null : (trim($stderr) ?: "{$cmdArray[0]} exited with code {$code}")
+            'error'  => $code === 0 ? null : (trim($stderr) ?: "{$cmdArray[0]} exited with code {$code}"),
         ];
     }
 }

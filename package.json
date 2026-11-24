@@ -3,8 +3,25 @@
   "version": "2.1.0",
   "private": true,
   "description": "MSP Tools - Real-Time Auto-Detect Multi-Brand Mobile Service Platform",
+  "main": "./out/main/index.js",
   "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
     "start": "node node-engine/server.js",
     "php": "php -S 127.0.0.1:8910 -t public php-engine/router.php"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^33.4.11",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11"
   }
 }

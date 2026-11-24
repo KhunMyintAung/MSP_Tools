@@ -3,30 +3,28 @@ const electron = require("electron");
 const node_child_process = require("node:child_process");
 const path = require("node:path");
 let phpServer = null;
-const PHP_PORT = 8910;
-const PHP_BASE_URL = `http://127.0.0.1:${PHP_PORT}`;
+const PORT = 8910;
+const BASE_URL = `http://127.0.0.1:${PORT}`;
 function startPhpEngine() {
-  const publicDir = path.join(electron.app.getAppPath(), "php-engine", "public");
-  phpServer = node_child_process.spawn("php", ["-S", `127.0.0.1:${PHP_PORT}`, "-t", publicDir], {
+  const router = path.join(electron.app.getAppPath(), "php-engine", "router.php");
+  const publicDir = path.join(electron.app.getAppPath(), "public");
+  phpServer = node_child_process.spawn("php", ["-S", `127.0.0.1:${PORT}`, "-t", publicDir, router], {
     windowsHide: true,
     shell: false
   });
-  phpServer.on("error", (err) => {
-    console.error("Failed to start PHP engine:", err.message);
-  });
+  phpServer.on("error", (err) => console.error("Failed to start PHP engine:", err.message));
 }
-async function callPhpApi(endpoint, init) {
+async function callApi(endpoint, init) {
   try {
-    const res = await fetch(`${PHP_BASE_URL}${endpoint}`, init);
-    if (!res.ok) {
-      return { ok: false, error: `PHP Engine HTTP ${res.status}` };
+    const res = await fetch(`${BASE_URL}${endpoint}`, init);
+    const text = await res.text();
+    try {
+      return JSON.parse(text);
+    } catch {
+      return { ok: false, error: `Invalid JSON: ${text.slice(0, 180)}` };
     }
-    return await res.json();
   } catch (error) {
-    return {
-      ok: false,
-      error: `PHP Engine offline (${PHP_BASE_URL}). Ensure PHP 8.2+ is installed and in PATH. ${error instanceof Error ? error.message : ""}`
-    };
+    return { ok: false, error: `PHP offline (${BASE_URL}). ${error instanceof Error ? error.message : ""}` };
   }
 }
 function createWindow() {
@@ -44,25 +42,23 @@ function createWindow() {
       sandbox: true
     }
   });
-  if (process.env.ELECTRON_RENDERER_URL) {
-    void win.loadURL(process.env.ELECTRON_RENDERER_URL);
-  } else {
-    void win.loadFile(path.join(__dirname, "../renderer/index.html"));
-  }
+  if (process.env.ELECTRON_RENDERER_URL) void win.loadURL(process.env.ELECTRON_RENDERER_URL);
+  else void win.loadFile(path.join(__dirname, "../renderer/index.html"));
 }
 electron.app.whenReady().then(() => {
   startPhpEngine();
-  electron.ipcMain.handle("msp:health", () => callPhpApi("/api/v1/health"));
-  electron.ipcMain.handle("msp:scan", () => callPhpApi("/api/v1/devices/scan"));
+  electron.ipcMain.handle("msp:health", () => callApi("/api/health"));
+  electron.ipcMain.handle("msp:scan", () => callApi("/api/scan"));
+  electron.ipcMain.handle("msp:deviceInfo", () => callApi("/api/device-info?usb=1"));
   electron.ipcMain.handle(
     "msp:executeJob",
-    (_event, payload) => callPhpApi("/api/v1/jobs/execute", {
+    (_event, payload) => callApi("/api/execute", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     })
   );
-  createWindow();
+  setTimeout(() => createWindow(), 800);
   electron.app.on("activate", () => {
     if (electron.BrowserWindow.getAllWindows().length === 0) createWindow();
   });
