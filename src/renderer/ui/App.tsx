@@ -18,15 +18,7 @@ const BRANDS: BrandItem[] = [
 ];
 
 const MODELS: ModelItem[] = [
-  { id: "mi-marble", brand: "XIAOMI", name: "POCO F5 / Redmi Note 12 Turbo", soc: "SM7475-AB · Snapdragon 7+ Gen 2", modes: ["edl", "fastboot", "adb"] },
-  { id: "mi-ruby", brand: "XIAOMI", name: "Redmi Note 12 Pro 5G (ruby)", soc: "MT6877V · Dimensity 1080", modes: ["brom", "preloader", "fastboot"] },
-  { id: "sm-s918b", brand: "SAMSUNG", name: "Galaxy S23 Ultra (SM-S918B)", soc: "SM8550 · Snapdragon 8 Gen 2", modes: ["odin", "adb"] },
-  { id: "sm-a546e", brand: "SAMSUNG", name: "Galaxy A54 5G (SM-A546E)", soc: "S5E8835 · Exynos 1380", modes: ["odin", "adb"] },
-  { id: "oppo-cph2477", brand: "OPPO", name: "OPPO Reno8 T 5G (CPH2477)", soc: "SM6375 · Snapdragon 695", modes: ["edl", "fastboot"] },
-  { id: "vivo-v2250", brand: "VIVO", name: "vivo V27 5G (V2250)", soc: "MT6886 · Dimensity 7200", modes: ["brom", "preloader"] },
-  { id: "rmx-3706", brand: "REALME", name: "realme 11 Pro 5G (RMX3706)", soc: "MT6877V · Dimensity 7050", modes: ["brom", "fastboot"] },
-  { id: "tecno-ck7n", brand: "TECNO", name: "TECNO Camon 20 Pro (CK7n)", soc: "MT6789 · Helio G99", modes: ["brom", "preloader"] },
-  { id: "infinix-x6833b", brand: "INFINIX", name: "Infinix Note 30 (X6833B)", soc: "MT6789 · Helio G99", modes: ["brom", "preloader"] }
+  { id: "auto-detect", brand: "XIAOMI", name: "Auto-Detect Connected Device", soc: "Live ADB / Fastboot / EDL / BROM / META / Sideload", modes: ["adb", "fastboot", "edl", "brom", "meta", "sideload"] }
 ];
 
 const OPERATIONS: JobOp[] = [

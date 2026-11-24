@@ -1,6 +1,10 @@
-node_modules/
-vendor/
-bin/
+﻿node_modules/
+out/
+dist/
 *.log
 .DS_Store
+Thumbs.db
+bin/*.exe
+bin/*.dll
 .env
+.env.*
